@@ -393,7 +393,7 @@ fn do_dungeon(
                         minluck: chestluck,
                         common,
                         rare,
-                    } = loot[ind]
+                    } = loot[ind].clone()
                     else {
                         unreachable!();
                     };
@@ -401,7 +401,7 @@ fn do_dungeon(
                     // we're always narrowing the [minluck, maxluck] range here, hence the
                     // .min() / .max() to make sure we keep ourselves in that range
                     if chestluck >= minluck {
-                        alt_loot[ind] = Goodie::CommonChest(common);
+                        alt_loot[ind] = Goodie::CommonChest(common.clone());
                         handle_loot(
                             minluck,
                             chestluck.min(maxluck),
@@ -410,7 +410,7 @@ fn do_dungeon(
                         );
                     }
                     if chestluck < maxluck {
-                        alt_loot[ind] = Goodie::RareChest(rare);
+                        alt_loot[ind] = Goodie::RareChest(rare.clone());
                         handle_loot(
                             chestluck.next_up().max(minluck),
                             maxluck,
