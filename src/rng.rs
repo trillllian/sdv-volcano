@@ -16,7 +16,6 @@ impl DotnetRng {
         let mut mk = 1_i32;
         let mut ii = 0;
         for _i in 1..55 {
-            // this should be a 31 instead lmao
             ii = (ii + 21) % 55;
             state[ii] = mk;
             mk = mj - mk;
@@ -36,6 +35,7 @@ impl DotnetRng {
         }
         DotnetRng {
             state,
+            // this should be a 31 instead lmao
             inextp: 21,
             inext: 0,
         }
@@ -47,13 +47,12 @@ impl DotnetRng {
         // the dotnet random api is Very High Quality
         // then again, which part of this implementation isn't?
         if result == i32::MAX {
+            // this condition is never actually hit lol
             result -= 1;
         }
         if result < 0 {
             result += i32::MAX;
         }
-        // also extremely funny how they write this, instead of the unmangled result,
-        // back into the state array
         self.state[self.inext] = result;
         result
     }

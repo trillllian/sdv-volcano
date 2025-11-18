@@ -1,18 +1,14 @@
 use std::fmt::Write;
-use std::{
-    fmt::Display,
-    ops::{Index, IndexMut},
-};
+use std::ops::{Index, IndexMut};
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlImageElement};
 
+mod loot;
 mod map_data;
 mod rng;
 
-// this is part of stdlib in nightly
-fn f64_next_up(x: f64) -> f64 {
-    // this version only works for finite positive floats
-    f64::from_bits(x.to_bits() + 1)
+fn format_icon(name: &str) -> String {
+    format!("<img src=\"icons/{}.png\" class=icon>", name)
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -92,216 +88,6 @@ struct DungeonFloorState {
     layout_id: u32,
     min_luck: f64,
     max_luck: f64,
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-enum CommonChest {
-    CinderShards,
-    GoldenCoconut,
-    TaroTuber,
-    PineappleSeeds,
-    ProtectionRing,
-    SoulSapperRing,
-    DwarfSword,
-    DwarfHammer,
-    DwarfDagger,
-}
-
-impl Display for CommonChest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::CinderShards => "Cinder Shard (3)",
-            Self::GoldenCoconut => "Golden Coconut",
-            Self::TaroTuber => "Taro Tuber (8)",
-            Self::PineappleSeeds => "Pineapple Seeds (5)",
-            Self::ProtectionRing => "Protection Ring",
-            Self::SoulSapperRing => "Soul Sapper Ring",
-            Self::DwarfSword => "Dwarf Sword",
-            Self::DwarfHammer => "Dwarf Hammer",
-            Self::DwarfDagger => "Dwarf Dagger",
-        })
-    }
-}
-
-impl CommonChest {
-    fn generate(seed: i32, settings: GameSettings) -> Self {
-        let mut rng = rng::DotnetRng::new(seed);
-        rng.next(); // one roll used for rare/normal check
-        let ind = loop {
-            let ind = rng.next_range(7);
-            if ind == 1 && !settings.cracked_golden_coconut {
-                continue;
-            }
-            break ind;
-        };
-        match ind {
-            0 => Self::CinderShards,
-            1 => Self::GoldenCoconut,
-            2 => Self::TaroTuber,
-            3 => Self::PineappleSeeds,
-            4 => Self::ProtectionRing,
-            5 => Self::SoulSapperRing,
-            6 => {
-                [Self::DwarfSword, Self::DwarfHammer, Self::DwarfDagger][rng.next_range(3) as usize]
-            }
-            _ => unreachable!(),
-        }
-    }
-    fn get_icon(&self) -> &'static str {
-        match self {
-            CommonChest::CinderShards => "cinder_shard",
-            CommonChest::GoldenCoconut => "golden_coconut",
-            CommonChest::TaroTuber => "taro_tuber",
-            CommonChest::PineappleSeeds => "pineapple_seeds",
-            CommonChest::ProtectionRing => "protection_ring",
-            CommonChest::SoulSapperRing => "soul_sapper_ring",
-            CommonChest::DwarfSword => "dwarf_sword",
-            CommonChest::DwarfHammer => "dwarf_hammer",
-            CommonChest::DwarfDagger => "dwarf_dagger",
-        }
-    }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
-enum RareChest {
-    CinderShards,
-    MermaidBoots,
-    DragonscaleBoots,
-    GoldenCoconuts,
-    PhoenixRing,
-    HotJavaRing,
-    DragontoothCutlass,
-    DragontoothClub,
-    DragontoothShiv,
-    DeluxePirateHat,
-    OstrichEgg,
-}
-
-impl Display for RareChest {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(match self {
-            Self::CinderShards => "Cinder Shard (10)",
-            Self::MermaidBoots => "Mermaid Boots",
-            Self::DragonscaleBoots => "Dragonscale Boots",
-            Self::GoldenCoconuts => "Golden Coconut (3)",
-            Self::PhoenixRing => "Phoenix Ring",
-            Self::HotJavaRing => "Hot Java Ring",
-            Self::DragontoothCutlass => "Dragontooth Cutlass",
-            Self::DragontoothClub => "Dragontooth Club",
-            Self::DragontoothShiv => "Dragontooth Shiv",
-            Self::DeluxePirateHat => "Deluxe Pirate Hat",
-            Self::OstrichEgg => "Ostrich Egg",
-        })
-    }
-}
-
-impl RareChest {
-    fn generate(seed: i32, settings: GameSettings) -> Self {
-        let mut rng = rng::DotnetRng::new(seed);
-        rng.next(); // one roll used for rare/normal check
-        let ind = loop {
-            let ind = rng.next_range(9);
-            if ind == 3 && !settings.cracked_golden_coconut {
-                continue;
-            }
-            break ind;
-        };
-        match ind {
-            0 => Self::CinderShards,
-            1 => Self::MermaidBoots,
-            2 => Self::DragonscaleBoots,
-            3 => Self::GoldenCoconuts,
-            4 => Self::PhoenixRing,
-            5 => Self::HotJavaRing,
-            6 => [
-                Self::DragontoothCutlass,
-                Self::DragontoothClub,
-                Self::DragontoothShiv,
-            ][rng.next_range(3) as usize],
-            7 => Self::DeluxePirateHat,
-            8 => Self::OstrichEgg,
-            _ => unreachable!(),
-        }
-    }
-
-    fn get_icon(&self) -> &'static str {
-        match self {
-            RareChest::CinderShards => "cinder_shard",
-            RareChest::MermaidBoots => "mermaid_boots",
-            RareChest::DragonscaleBoots => "dragonscale_boots",
-            RareChest::GoldenCoconuts => "golden_coconut",
-            RareChest::PhoenixRing => "phoenix_ring",
-            RareChest::HotJavaRing => "hot_java_ring",
-            RareChest::DragontoothCutlass => "dragontooth_cutlass",
-            RareChest::DragontoothClub => "dragontooth_club",
-            RareChest::DragontoothShiv => "dragontooth_shiv",
-            RareChest::DeluxePirateHat => "deluxe_pirate_hat",
-            RareChest::OstrichEgg => "ostrich_egg",
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-enum Goodie {
-    DragonTooth,
-    CommonChest(CommonChest),
-    RareChest(RareChest),
-    ChanceChest {
-        minluck: f64,
-        common: CommonChest,
-        rare: RareChest,
-    },
-}
-
-impl Display for Goodie {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Goodie::DragonTooth => write!(f, "Dragon Tooth"),
-            Goodie::CommonChest(c) => write!(f, "common chest: {}", c),
-            Goodie::RareChest(c) => write!(f, "rare chest: {}", c),
-            Goodie::ChanceChest {
-                minluck,
-                common,
-                rare,
-            } => {
-                write!(
-                    f,
-                    "luck boost > {:.4}: rare: {}, else common: {}",
-                    minluck, rare, common
-                )
-            }
-        }
-    }
-}
-
-fn format_icon(name: &str) -> String {
-    format!("<img src=\"icons/{}.png\" class=icon>", name)
-}
-
-impl Goodie {
-    fn to_html(&self) -> String {
-        match self {
-            Goodie::DragonTooth => format!("{} Dragon Tooth", format_icon("dragon_tooth")),
-            Goodie::CommonChest(c) => {
-                format!(
-                    "{} {} {}",
-                    format_icon("common_chest"),
-                    format_icon(c.get_icon()),
-                    c
-                )
-            }
-            Goodie::RareChest(c) => {
-                format!(
-                    "{} {} {}",
-                    format_icon("rare_chest"),
-                    format_icon(c.get_icon()),
-                    c
-                )
-            }
-            // shouldn't ever be turned into html
-            Goodie::ChanceChest { .. } => self.to_string(),
-        }
-    }
 }
 
 impl DungeonFloorState {
@@ -453,13 +239,13 @@ impl DungeonFloorState {
                             chest_rng.next_f64() - if self.level == 9 { 0.5 } else { 0.1 } + 1.;
                         if chest_roll < self.min_luck {
                             // only rare
-                            goodies.push(Goodie::RareChest(RareChest::generate(
+                            goodies.push(Goodie::RareChest(loot::RareChest::generate(
                                 chest_seed,
                                 self.settings,
                             )));
                         } else if chest_roll >= self.max_luck {
                             // only common
-                            goodies.push(Goodie::CommonChest(CommonChest::generate(
+                            goodies.push(Goodie::CommonChest(loot::CommonChest::generate(
                                 chest_seed,
                                 self.settings,
                             )));
@@ -467,8 +253,8 @@ impl DungeonFloorState {
                             // both possible
                             goodies.push(Goodie::ChanceChest {
                                 minluck: chest_roll,
-                                common: CommonChest::generate(chest_seed, self.settings),
-                                rare: RareChest::generate(chest_seed, self.settings),
+                                common: loot::CommonChest::generate(chest_seed, self.settings),
+                                rare: loot::RareChest::generate(chest_seed, self.settings),
                             });
                         }
                     }
@@ -536,7 +322,7 @@ fn compute_volcano_layouts(settings: GameSettings) -> Vec<(f64, f64, [u32; 10])>
                     let mut res1 = compute_inner(settings, prev, minluck, midpoint);
                     // in there: rng ~= minluck * 0.5, but minluck is slightly increased,
                     // so rng < minluck * 0.5
-                    let res2 = compute_inner(settings, prev, f64_next_up(midpoint), maxluck);
+                    let res2 = compute_inner(settings, prev, midpoint.next_up(), maxluck);
 
                     res1.extend(res2);
                     return res1;
@@ -591,6 +377,8 @@ macro_rules! console_log {
 // (minluck, maxluck, item)
 type ProbabilityRange<T> = Vec<(f64, f64, T)>;
 
+use loot::Goodie;
+
 fn do_dungeon(
     settings: GameSettings,
 ) -> (
@@ -601,11 +389,11 @@ fn do_dungeon(
     let mut loots_poss = [(); 10].map(|_| ProbabilityRange::<Vec<Goodie>>::new());
     for (minluck, maxluck, lvls) in compute_volcano_layouts(settings) {
         for (i, &x) in lvls.iter().enumerate() {
-            if layouts_poss[i]
-                .last()
-                .is_some_and(|y| y.2 == x && f64_next_up(y.1) == minluck)
+            if let Some(y) = layouts_poss[i].last_mut()
+                && y.2 == x
+                && y.1.next_up() == minluck
             {
-                layouts_poss[i].last_mut().unwrap().1 = maxluck;
+                y.1 = maxluck;
             } else {
                 layouts_poss[i].push((minluck, maxluck, x));
             }
@@ -645,7 +433,7 @@ fn do_dungeon(
                     if chestluck < maxluck {
                         alt_loot[ind] = Goodie::RareChest(rare);
                         handle_loot(
-                            f64_next_up(chestluck).max(minluck),
+                            chestluck.next_up().max(minluck),
                             maxluck,
                             alt_loot,
                             loots_poss,
@@ -654,11 +442,11 @@ fn do_dungeon(
                     // we always hit at least one of those branches
                 } else {
                     // final loot set
-                    if loots_poss
-                        .last()
-                        .is_some_and(|x| x.2 == loot && f64_next_up(x.1) == minluck)
+                    if let Some(x) = loots_poss.last_mut()
+                        && x.2 == loot
+                        && x.1.next_up() == minluck
                     {
-                        loots_poss.last_mut().unwrap().1 = maxluck;
+                        x.1 = maxluck;
                     } else {
                         loots_poss.push((minluck, maxluck, loot));
                     }
