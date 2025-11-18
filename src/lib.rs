@@ -229,34 +229,13 @@ impl DungeonFloorState {
                             self.settings.legacy_rng,
                             &[self.rng.next() as f64],
                         );
-                        let mut chest_rng = rng::DotnetRng::new(chest_seed);
-                        // roll < (0.1 or 0.5) + luckboost
-                        // roll - (0.1 or 0.5) < luckboost
-                        // roll - (0.1 or 0.5) < luckmult-1
-                        // roll - (0.1 or 0.5) + 1 < luckmult
-                        // (though that technically rounds different..)
-                        let chest_roll =
-                            chest_rng.next_f64() - if self.level == 9 { 0.5 } else { 0.1 } + 1.;
-                        if chest_roll < self.min_luck {
-                            // only rare
-                            goodies.push(Goodie::RareChest(loot::RareChest::generate(
-                                chest_seed,
-                                self.settings,
-                            )));
-                        } else if chest_roll >= self.max_luck {
-                            // only common
-                            goodies.push(Goodie::CommonChest(loot::CommonChest::generate(
-                                chest_seed,
-                                self.settings,
-                            )));
-                        } else {
-                            // both possible
-                            goodies.push(Goodie::ChanceChest {
-                                minluck: chest_roll,
-                                common: loot::CommonChest::generate(chest_seed, self.settings),
-                                rare: loot::RareChest::generate(chest_seed, self.settings),
-                            });
-                        }
+                        goodies.push(Goodie::generate(
+                            chest_seed,
+                            self.settings,
+                            self.level,
+                            self.min_luck,
+                            self.max_luck,
+                        ));
                     }
                 }
             }
