@@ -47,7 +47,7 @@
         font-weight: bold;
       }
       #settings {
-        padding-bottom: 5px;
+        padding-bottom: 15px;
       }
       .smallnum {
         width: 7em;
@@ -64,8 +64,11 @@
         <h3>Stardew Valley Volcano Dungeon Predictor</h3>
         <p>
           by <a href="https://r9.pm">trillian</a> -
-          <a href="https://github.com/trillllian/sdv-volcano">source code</a>
+          <a href="https://github.com/trillllian/sdv-volcano">source code / bug reports</a>
+          <br>
+          tested in versions 1.6.0 to 1.6.15.
         </p>
+        <h3>Settings</h3>
         <label for="seed">game seed:</label>
         <input class="setting" type="number" id="seed" />
         <br />
@@ -89,16 +92,19 @@
         <label for="max_luck_lvl">max luck buff level:</label>
         <input class="setting smallnum" type="number" id="max_luck_lvl" min="0" />
         <br />
-        <label for="days_played">days played:</label>
-        <input class="setting smallnum" type="number" id="days_played" min="1" />
-        <br />
         <span>
           the luck value shown in the ranges is the daily luck (-0.1 to 0.1), plus 0.07
           per luck buff level.
         </span>
       </div>
+      <label for="days_played">days played:</label>
+      <input class="setting smallnum" type="number" id="days_played" min="1" />
+      <span id="day_name"></span>
+      <br />
       <!--<input id=spam value="run 1k iters" type=button>-->
-      <div id="temp"></div>
+      <label for="search_tgt">search for loot:</label>
+      <input id="search_tgt" />
+      <input id="search_btn" value="Search" type="button">
       <h3>Loot</h3>
       <div id="goodies"></div>
     </div>

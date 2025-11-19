@@ -64,8 +64,7 @@ async function main() {
 
     const update = () => {
         const settings = get_settings();
-        const res = main_update(settings);
-        document.getElementById("temp").innerText = res;
+        main_update(settings);
         reset_canvas();
         for (const el of document.getElementsByClassName("layout-btn")) {
             el.addEventListener("click", (ev) => {
@@ -90,6 +89,21 @@ async function main() {
     document.getElementById("spam")?.addEventListener("click", () => {
         for (let i = 0; i < 1000; i++) update();
     });
+
+    document.getElementById("search_btn").addEventListener("click", () => {
+        let dp = document.getElementById("days_played") as HTMLInputElement;
+        let search_tgt = (document.getElementById("search_tgt") as HTMLInputElement).value.toLowerCase();
+        let goodies = document.getElementById("goodies");
+        // try at most 1k iters to prevent hanging
+        let old_value = dp.value;
+        let i = 0;
+        for(; i < 1000; i++) {
+            dp.value = ""+((+dp.value)+1);
+            update();
+            if(goodies.innerText.toLowerCase().search(search_tgt) != -1) break;
+        }
+        if(i == 1000) { dp.value = old_value; update(); }
+    })
 }
 
 main();

@@ -452,21 +452,18 @@ fn is_monster_floor(layout: u32) -> bool {
 }
 
 #[wasm_bindgen]
-pub fn main_update(settings: GameSettings) -> String {
+pub fn main_update(settings: GameSettings) {
     console_error_panic_hook::set_once();
-    let mut out = String::new();
     let (layouts, loots) = do_dungeon(settings);
 
     let total_seasons = (settings.days_played - 1) / 28;
     let year = total_seasons / 4 + 1;
     let season = total_seasons % 4;
     let day = (settings.days_played - 1) % 28 + 1;
-    writeln!(
-        out,
-        "day: {} {day}, Y{year}",
+    let day_name = format!(
+        "{} {day}, Y{year}",
         ["spring", "summer", "fall", "winter"][season as usize],
-    )
-    .unwrap();
+    );
 
     fn format_layout(level: usize, layout: u32) -> String {
         let displayname = if is_mushroom_floor(layout) {
@@ -566,8 +563,9 @@ pub fn main_update(settings: GameSettings) -> String {
     doc.get_element_by_id("map-sel")
         .unwrap()
         .set_inner_html(&layouts_full);
-
-    return out;
+    doc.get_element_by_id("day_name")
+        .unwrap()
+        .set_inner_html(&day_name);
 }
 
 #[wasm_bindgen]
